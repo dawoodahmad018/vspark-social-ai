@@ -2,14 +2,14 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { browserSupabase } from '@/lib/supabase/browser';
+import { apiRequest } from '@/lib/client';
 const links = [{ href: '/dashboard', icon: '✦', title: 'Create content' }, { href: '/posts', icon: '▤', title: 'Saved posts' }, { href: '/integrations', icon: '⌘', title: 'Integrations' }, { href: '/settings', icon: '☷', title: 'Settings' }];
 export function AppShell({ children, email, configured }: { children: React.ReactNode; email: string | null; configured: boolean }) {
   const path = usePathname(); const router = useRouter();
   const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
   async function logout() {
     setBusy(true); setError('');
-    try { const { error } = await browserSupabase().auth.signOut(); if (error) throw error; router.replace('/login'); router.refresh(); }
+    try { await apiRequest('/api/auth/logout', { method: 'POST' }); router.replace('/login'); router.refresh(); }
     catch { setError('Could not sign out. Please retry.'); } finally { setBusy(false); }
   }
   return <div className="app-frame"><aside className="sidebar">

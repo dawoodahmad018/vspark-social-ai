@@ -4,26 +4,62 @@ Do not paste secrets into chat, commit them, or upload .env files to organizers.
 Copy `.env.example` to `.env.local` locally and fill it in your editor. Vercel gets
 its own encrypted environment variables. This scaffold contains no real credentials.
 
-## 1. Supabase: database, auth and uploads (A + lead)
+## 1. Firebase identity + Supabase database (required now)
 
-1. Create/select a Supabase project. Ask organizers to approve Supabase Auth as
-   the Firebase alternative before relying on it for submission.
-2. Project Settings → API: set NEXT_PUBLIC_SUPABASE_URL and the publishable key.
-   Never use a service-role key in either public variable.
-3. Put the service-role key in SUPABASE_SERVICE_ROLE_KEY server-side only; it is
-   reserved for reviewed background-worker / encrypted-token RPC operations.
-4. Run `supabase/migrations/001_initial.sql` in SQL Editor on the new project.
-   Then run later numbered migrations in order. Review before executing; do not
-   run against an unrelated existing production project.
-5. Auth → URL Configuration: Site URL = local origin during testing, then the
-   exact Vercel production origin. Add `/auth/confirm` redirect URLs for local and
-   production. Keep email confirmation on; configure your confirmation email
-   template to `/auth/confirm?token_hash={{ .TokenHash }}&type=email` on your site.
-6. Enable email/password. Register two accounts, confirm emails, test login and
-   logout. Check protected page redirect and API 401, then cross-user CRUD denial.
-7. Confirm Storage bucket `post-assets` is private and limited to 5 MB and permitted
-   types. A must finish signature-validation upload route, then test a real file,
-   forbidden type, oversize file and another user's path access.
+Supabase Auth approval was not confirmed. Firebase Email/Password is implemented;
+Supabase is used for Postgres/Storage with its supported Firebase JWT integration.
+Existing Supabase/Gemini/Google variable names are preserved. Added Firebase
+variables are server-only. Do not put a service-account JSON inside this project.
+
+1. Firebase Console -> create/select the project -> Authentication -> Sign-in
+   method -> enable Email/Password. Project settings -> General -> register a Web
+   app if needed. Copy its apiKey into FIREBASE_API_KEY and projectId into
+   FIREBASE_PROJECT_ID in .env.local. Do not paste values into chat.
+2. Supabase -> Authentication -> Third-party Auth -> Add integration -> Firebase.
+   Enter the SAME Firebase project ID. This permits Supabase to validate Firebase
+   JWTs. Keep the existing URL/publishable-key env names. Do not disable RLS.
+3. In the intended competition Supabase project's SQL Editor apply each migration
+   ONCE, in order: 001_initial.sql, 002_generation_quota.sql,
+   003_firebase_identity.sql. If 001/002 were already applied, run only 003.
+   If unsure, inspect tables/migration history before running. 003 is transactional,
+   converts UUID ownership to Firebase string UIDs and replaces owner/storage RLS.
+   Existing Supabase Auth users are NOT automatically mapped to Firebase users.
+4. New Firebase tokens require trusted custom claim role=authenticated. Fast path:
+   Firebase Project Settings -> Service accounts -> generate a private key for a
+   service account with Firebase Authentication Admin on this SAME project.
+   Keep the downloaded JSON outside the repository/submission. Copy only its
+   client_email into FIREBASE_CLIENT_EMAIL and private_key into
+   FIREBASE_PRIVATE_KEY, server-side. Example format (not a real key):
+   `FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"`
+   Keep quotes in .env.local; Vercel's variable editor receives the key value,
+   not surrounding dotenv quotes. Both escaped and actual newlines are handled.
+   Restart the server. Registration/login verifies the Firebase identity, merges
+   the role claim through Google's admin REST API, then refreshes the token.
+   No service-role Supabase key is used for ordinary CRUD.
+5. Alternative without a runtime admin key: deploy a trusted Firebase Auth
+   onCreate trigger using Admin SDK setCustomUserClaims(uid, {role:'authenticated'}),
+   preserving any existing claims. Also provision existing users. Log out/in after
+   the trigger has run. The trigger itself is NOT deployed by this repository.
+   Do not grant anon table access to skip this step. Every newly registered user
+   needs the claim; manually provisioning only demo users is not a full solution.
+6. Run the production build/start commands below, then the disposable live check:
+   `node --env-file=.env.local scripts/check-live-mvp.mjs`
+   It creates/deletes Firebase test users and posts, verifies login/refresh/CRUD,
+   stale edits, two-user ownership, direct RLS denial and authenticated Gemini.
+   It stops at the first blocker. Inspect any MANUAL CLEANUP message; remove
+   leftover vspark-check-* accounts in Firebase Console. Firebase account deletion
+   does not cascade into Postgres; production user deletion requires a reviewed
+   cleanup workflow. No account-delete feature is claimed here.
+7. Confirm private bucket post-assets, 5 MB limit, MIME restrictions and Firebase
+   UID object-prefix RLS. Upload handler remains an explicit 501 until implemented.
+
+Local sessions use HttpOnly/SameSite cookies; production sets Secure. Use
+http://localhost:3000 locally and HTTPS on Vercel. Logout clears the current
+browser cookies, not all devices. JWT verification checks signature/issuer/audience/
+expiry, but does not query token revocation on every request: an already issued
+ID token can remain valid for up to its expiry (normally one hour). Refresh is
+provider-validated. Firebase email verification, reset-password and MFA flows are
+not implemented; enable stronger account policies if required after the MVP.
 
 ## 2. Gemini (B)
 
@@ -78,7 +114,7 @@ its own encrypted environment variables. This scaffold contains no real credenti
 3. Set all required environment variables in Vercel for the intended environment;
    NEXT_PUBLIC_APP_URL must match the exact HTTPS deployment origin. Redeploy
    after changing build-time NEXT_PUBLIC values. No service keys are public.
-4. Update Supabase redirects and Google OAuth callback to the final URL. Public
+4. Update Google OAuth callback to the final URL. Public
    hosting alone does not imply the dashboard's protected content is public.
 5. Test incognito registration/login, real generation, two-user DB isolation, real
    upload, Drive sync, edit/delete and scheduled email on the deployed app.
@@ -92,3 +128,28 @@ its own encrypted environment variables. This scaffold contains no real credenti
    provide `npm.cmd ci` instructions and never include secrets either way.
 8. Submit GitHub URL + live Vercel URL + organizer Drive folder link before deadline.
    No repository, cloud resources, upload or public deployment is claimed until observed.
+
+## Reproducible local checks
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd test
+npm.cmd run build
+npm.cmd start
+# In another PowerShell window in this same folder:
+node scripts/smoke.mjs
+node --env-file=.env.local scripts/check-gemini.mjs
+node --env-file=.env.local scripts/check-live-mvp.mjs
+```
+
+The direct Gemini probe verified gemini-3.1-flash-lite in this account on
+18 November 2026. The local nonsecret GEMINI_MODEL was updated to that model.
+Set the same value in Vercel, or verify a different model before switching.
+An initial configured model and a gemini-2.5-flash probe returned 404; a separate
+minimal gemini-3.5-flash request timed out. No fallback responses were fabricated.
+
+References: [Firebase REST](https://firebase.google.com/docs/reference/rest/auth),
+[Firebase JWT verification](https://firebase.google.com/docs/auth/admin/verify-id-tokens),
+[Supabase Firebase integration and role claim](https://supabase.com/docs/guides/auth/third-party/firebase-auth),
+[Google admin account update](https://cloud.google.com/identity-platform/docs/reference/rest/v1/projects.accounts/update).

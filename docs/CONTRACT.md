@@ -6,9 +6,17 @@ editing. Ask the lead to change shared types/schema; do not fork the contract.
 
 ## Identity and transport
 
-Supabase Auth is the proposed Firebase alternative; obtain organizer approval.
-Use the Supabase SSR cookie session. Every protected page and API verifies the
-user server-side using `auth.getUser()` (never trust a cookie/user_id directly).
+Firebase Email/Password authentication is mandatory unless organizer approval changes.
+POST /api/auth/register and /api/auth/login accept {email,password}; logout and
+refresh use POST /api/auth/logout and /api/auth/refresh. Responses never expose tokens.
+HttpOnly, SameSite=Lax cookies hold the ID/refresh tokens (Secure in production).
+Every workspace page/API verifies RS256 signatures, issuer, audience and expiry
+against Firebase public keys. Expired sessions refresh through Firebase, not a
+client-supplied identity. Logout clears this browser session; it is not global
+revocation. Existing ID tokens remain valid until expiry after server-side revocation.
+Supabase validates the same Firebase JWT via its configured third-party integration.
+Tokens MUST have trusted custom claim role=authenticated; do not grant anon CRUD.
+Ordinary CRUD uses the publishable key plus Firebase JWT, never service-role bypass.
 Browser requests are same-origin with cookies. Mutations reject foreign Origin.
 SQL RLS is mandatory in addition to route checks. Never use a service key in UI.
 
@@ -22,7 +30,7 @@ Dates are ISO-8601 UTC strings; `timezone` is a valid IANA zone for display.
 
 ## Canonical models
 
-`Post`: id UUID, user_id UUID, prompt, caption, platform (instagram/linkedin/x),
+`Post`: id UUID, user_id text (Firebase UID), prompt, caption, platform (instagram/linkedin/x),
 scheduled_at nullable, timezone, status (draft/scheduled/archived), drive_file_id
 nullable, attachment_path nullable, created_at, updated_at. The application sends
 email reminders; it does not publish posts to social platforms. Do not label
@@ -30,7 +38,7 @@ emailed or Drive-synced posts as published.
 
 `CaptionCandidate`: id, caption (without hashtags), hashtags (array, each with #).
 `GenerationInput`: topic (3–1000 chars), platform, tone (professional/friendly/bold).
-Generation requires migration 002 and is capped at 3/minute and 40/day per user.
+Generation requires migrations 002 and 003 and is capped at 3/minute and 40/day per user.
 `PostInput`: prompt, caption (1–5000), platform, scheduled_at, timezone, status,
 attachment_path. Ownership and Drive file IDs are never accepted from the browser.
 `UpdatePostInput`: full PostInput plus expected_updated_at for optimistic locking.
@@ -62,7 +70,7 @@ does not mean a feature is implemented or tested. UI must distinguish these stat
 ## Storage and OAuth boundaries
 
 Bucket `post-assets` is private, max 5 MB, JPEG/PNG/WebP/PDF only. Object keys begin
-`{auth.uid()}/...`; enforce this in Storage RLS. Route validates size and actual
+`{Firebase UID}/...`; enforce this in Storage RLS. Route validates size and actual
 file signature, uses generated names, and does not trust browser MIME/filename.
 Use short-lived signed URLs for previews. No public bucket or arbitrary path reads.
 

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const input = generationSchema.parse(await bodyJson(request));
     if (!process.env.GEMINI_API_KEY || !process.env.GEMINI_MODEL) throw new ApiFailure('NOT_CONFIGURED', 'Gemini key and model are not configured.', 503);
     const quota = await supabase.rpc('claim_generation_slot');
-    if (quota.error) throw new ApiFailure('NOT_CONFIGURED', 'Apply the generation quota migration before enabling Gemini.', 503);
+    if (quota.error) throw new ApiFailure('NOT_CONFIGURED', 'Check Firebase third-party Auth, authenticated role claim and migrations 001–003 before enabling generation.', 503);
     if (!quota.data) throw new ApiFailure('RATE_LIMITED', 'Generation limit reached (3/minute, 40/day). Please try later.', 429, true);
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const response = await ai.models.generateContent({
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (!(error instanceof ApiFailure) && !(error instanceof z.ZodError)) {
       const status = typeof error === 'object' && error && 'status' in error ? Number(error.status) : 0;
+      if (status === 404) return failure(new ApiFailure('NOT_CONFIGURED', 'The configured Gemini model is unavailable. Check GEMINI_MODEL against models enabled for your key.', 503));
       return failure(new ApiFailure(status === 429 ? 'RATE_LIMITED' : 'UPSTREAM_ERROR', status === 429 ? 'Gemini quota reached. Try later.' : 'Gemini is unavailable or timed out. Please retry.', status === 429 ? 429 : 502, true));
     }
     return failure(error);

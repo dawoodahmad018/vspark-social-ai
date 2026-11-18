@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+.verification
+.env*
+*.pem
+*.key
+*service-account*.json
+*firebase-adminsdk*.json

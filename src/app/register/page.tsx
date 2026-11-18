@@ -1,3 +1,4 @@
 import { AuthForm } from '@/components/auth/auth-form';
-import { hasSupabase } from '@/lib/config';
-export default function RegisterPage() { return <AuthForm mode="register" configured={hasSupabase()} />; }
+import { hasFirebase } from '@/lib/config';
+export const dynamic = 'force-dynamic';
+export default function RegisterPage() { return <AuthForm mode="register" configured={hasFirebase()} />; }

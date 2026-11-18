@@ -12,8 +12,9 @@ Set-Location 'C:\Users\Dawood Ahmad\Desktop\VSpark-Competition-2026\vspark-socia
 npm.cmd run dev
 ```
 
-Open http://localhost:3000. No credentials are required to view the empty setup
-shell. Accounts and data operations fail closed until Supabase is configured.
+Open http://localhost:3000. The public login/register pages load without credentials. All workspace pages
+redirect signed-out users to login; APIs fail closed. Firebase and Supabase setup
+is required for an authenticated data flow.
 For integration setup, copy the template once, then edit it locally:
 
 ```powershell
@@ -37,9 +38,10 @@ node scripts/smoke.mjs http://localhost:3000
 
 - Responsive dashboard, topic/platform/tone panel, caption selection/editor,
   draft/schedule library, edit/delete controls, integration states and settings.
-- Supabase email/password registration/login/logout, confirmation callback,
-  refreshed SSR cookies and server-side identity verification. Once configured,
-  workspace routes redirect signed-out users to login.
+- Firebase Email/Password registration/login/logout through server REST routes,
+  HttpOnly session cookies, signature/issuer/audience verification and token refresh.
+  Optional server-side admin credentials provision the Supabase role claim.
+  All workspace routes redirect signed-out users to login.
 - Authenticated Postgres CRUD routes with explicit ownership filters, input
   validation, same-origin mutation checks and optimistic update timestamps.
 - Real Google GenAI SDK generation entry point: 2–3 structured caption options,
@@ -49,8 +51,9 @@ node scripts/smoke.mjs http://localhost:3000
 - SQL RLS policies, private upload bucket permissions and private encrypted-token
   table. No cloud migration or external integration has been run automatically.
 
-These are code paths ready for credentials and contributor completion, not claims
-that live Auth, Gemini, database writes, uploads, Drive or email were tested.
+Real Firebase registration/login/refresh and a direct Gemini caption request were
+verified locally. Authenticated database CRUD remains blocked by cloud setup;
+see docs/VERIFICATION.md for exact results. Uploads, Drive and email remain incomplete.
 
 ## Explicitly incomplete integrations
 
@@ -60,9 +63,9 @@ unavailable even if environment keys are present. No cron schedule is activated.
 The application does not publish content to social platforms; it stores schedules
 and is intended to send email reminders after the worker is implemented.
 
-Supabase Auth is the proposed alternative to Firebase Auth. Confirm organizer
-approval. Using Firebase instead requires a reviewed identity-to-RLS design;
-never pair Firebase users with unrestricted service-role CRUD from the browser.
+Firebase is the active identity provider. Supabase must be configured to accept
+that Firebase project, and tokens must include role=authenticated. Follow the
+exact setup in docs/MANUAL_SETUP.md. Ordinary CRUD uses RLS, not service-role bypass.
 
 ## Shared contract and five contributor assignments
 
@@ -85,7 +88,8 @@ assignments do not imply five computers or simultaneous local coders.
 Run numbered files in `supabase/migrations/` in order in a NEW Supabase project's
 SQL Editor. Migration 001 defines posts, preferences, dispatches, private token
 storage and private Storage policies. Migration 002 adds generation quotas and
-service-role grants. Keep RLS enabled. Test two-user isolation before submission.
+service-role grants. Migration 003 converts ownership to Firebase string UIDs and
+updates RLS/quotas. Apply each file once in order. Keep RLS enabled. Test two-user isolation before submission.
 
 Required post columns: id, user_id, prompt, caption, platform, scheduled_at,
 timezone, status, drive_file_id, created_at, updated_at. Optional attachment_path
@@ -98,7 +102,7 @@ success. Deleting a database post does not automatically remove an exported file
 
 ## First-hour priorities
 
-1. Lead/A: configure approved Supabase Auth, run SQL, verify login + two-user RLS.
+1. Lead/A: configure Firebase + Supabase third-party Auth, run SQL, verify login + two-user RLS.
 2. B: add the real Gemini key/model, verify useful captions and provider errors.
 3. C: complete the caption -> save -> edit/delete path and timezone checks.
 4. D/A: finish Drive OAuth/sync and real private uploads; test partial failures.
@@ -111,11 +115,14 @@ Mandatory requirements remain pending until implemented and tested.
 
 ## Deployment and submission
 
+Follow [deployment and submission guide](docs/DEPLOYMENT_SUBMISSION.md) for
+Vercel settings, environment names, GitHub commands and the clean unzipped export.
+
 This is a Vercel-compatible Node application, not a static export. `vercel.json`
 selects Next.js; no external cron is enabled before its worker is ready. Create a
 new GitHub repo containing only this app, or explicitly select `vspark-social-ai`
 as Vercel Root Directory when importing a parent repo. Populate environment values,
-update exact Supabase/Google redirect URLs, and redeploy after public env changes.
+update exact Google redirect URLs, and redeploy after public env changes.
 See MANUAL_SETUP.md for the complete ordered checklist.
 
 No GitHub remote, Vercel public URL or organizer Drive upload has been created
@@ -141,7 +148,7 @@ The dependency installer reported 14 high advisories; see the verification repor
 for the final audit result. No forced dependency changes were made.
 
 Official references: [Next.js](https://nextjs.org/docs/app),
-[Supabase SSR Auth](https://supabase.com/docs/guides/auth/server-side/creating-a-client),
+[Supabase Firebase Auth](https://supabase.com/docs/guides/auth/third-party/firebase-auth),
 [Google GenAI SDK](https://github.com/googleapis/js-genai),
 [Drive OAuth](https://developers.google.com/identity/protocols/oauth2/web-server),
 [Vercel cron](https://vercel.com/docs/cron-jobs/manage-cron-jobs).

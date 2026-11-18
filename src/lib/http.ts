@@ -31,6 +31,8 @@ export function sameOrigin(request: Request) {
   if (origin && origin !== expected) throw new ApiFailure('FORBIDDEN', 'Cross-origin mutation rejected.', 403);
 }
 export function databaseFailure(code?: string) {
-  if (code === '42501') return new ApiFailure('FORBIDDEN', 'Database access denied.', 403);
+  if (code === 'PGRST301' || code === 'PGRST302') return new ApiFailure('NOT_CONFIGURED', 'Supabase rejected the Firebase token. Configure Firebase third-party Auth and the authenticated role claim.', 503);
+  if (code === 'PGRST205' || code === '42P01') return new ApiFailure('NOT_CONFIGURED', 'Database tables are missing. Apply the numbered Supabase migrations in order.', 503);
+  if (code === '42501') return new ApiFailure('FORBIDDEN', 'Database access denied. Check Firebase role=authenticated and owner RLS policies.', 403);
   return new ApiFailure('UPSTREAM_ERROR', 'Database operation failed. Check the migration and retry.', 502, true);
 }
