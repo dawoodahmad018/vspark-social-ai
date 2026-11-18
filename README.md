@@ -3,7 +3,8 @@
 [GitHub](https://github.com/dawoodahmad018/vspark-social-ai) ? [Production domain](https://vspark-social-ai.vercel.app)
 
 Live-service checks: Firebase auth/admin provisioning, Postgres CRUD/scheduling,
-two-user RLS, authenticated Gemini and private uploads passed locally.
+two-user RLS, authenticated Gemini and private upload/retrieval passed locally
+AND on the public Vercel deployment.
 See docs/VERIFICATION.md for exact limits and deployment verification.
 
 Next.js 16 App Router + React + TypeScript + Tailwind foundation for the official
@@ -55,7 +56,7 @@ node scripts/smoke.mjs http://localhost:3000
 - Notification preference CRUD. Migration defines dispatch tracking, deduplication,
   atomic SKIP LOCKED claims, lease-token completion and uncertain-send handling.
 - SQL RLS policies, private upload bucket permissions and private encrypted-token
-  table. No cloud migration or external integration has been run automatically.
+  table. Live Auth/Postgres/Gemini/Storage checks passed; see verification report.
 
 Real Firebase registration/login/refresh and a direct Gemini caption request were
 verified locally. Authenticated database CRUD and private uploads now pass live checks;
@@ -137,8 +138,9 @@ as Vercel Root Directory when importing a parent repo. Populate environment valu
 update exact Google redirect URLs, and redeploy after public env changes.
 See MANUAL_SETUP.md for the complete ordered checklist.
 
-No GitHub remote, Vercel public URL or organizer Drive upload has been created
-in this setup pass. Those require your accounts and the organizer destination.
+GitHub main was pushed and the Vercel deployment is live; production smoke and
+authenticated CRUD/Storage/Gemini checks passed. Organizer Drive upload remains
+manual; use the clean source folder from scripts/prepare-submission.mjs.
 
 ## Screenshots
 

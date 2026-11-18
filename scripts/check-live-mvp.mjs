@@ -61,12 +61,14 @@ try {
   const uploaded=await upload.json();
   if(!uploaded.ok)throw new Error(`Storage upload failed: HTTP ${upload.status}`);
   uploads.push({path:uploaded.data.path,token:first.token});draft.attachment_path=uploaded.data.path;
+  const ownFile=await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/post-assets/${uploaded.data.path}`,{headers:{apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,Authorization:`Bearer ${first.token}`}});
+  if(!ownFile.ok || !(await ownFile.arrayBuffer()).byteLength)throw new Error('Owner Storage retrieval failed');
   const foreignFile=await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/post-assets/${uploaded.data.path}`,{headers:rlsHeaders});
   if(foreignFile.ok)throw new Error('Storage cross-user read was allowed');
   const invalid=new FormData();invalid.set('file',new File(['<svg/>'],'invalid.svg',{type:'image/svg+xml'}));
   const rejected=await fetch(base+'/api/uploads',{method:'POST',headers:{Cookie:first.cookie},body:invalid});
   if(rejected.status!==400)throw new Error('Unsafe upload type was not rejected');
-  console.log('PASS real private PNG upload, cross-user Storage denial and invalid type rejection');
+  console.log('PASS real private PNG upload/retrieval, cross-user Storage denial and invalid type rejection');
   const edited = await request(`/api/posts/${post.id}`,'PATCH',{...draft,caption:'Updated verification #test',scheduled_at:new Date(Date.now()+3600000).toISOString(),status:'scheduled',expected_updated_at:post.updated_at},first.cookie);
   if (!edited.data?.ok) throw new Error(`Edit failed: HTTP ${edited.response.status}`);
   const conflict = await request(`/api/posts/${post.id}`,'PATCH',{...draft,expected_updated_at:post.updated_at},first.cookie);

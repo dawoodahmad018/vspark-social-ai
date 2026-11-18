@@ -86,9 +86,9 @@ them, and rerun export. Required submission links: GitHub repo, live Vercel URL,
 organizer Google Drive folder. Record real URLs below only after verification:
 
 - GitHub: https://github.com/dawoodahmad018/vspark-social-ai
-- Vercel production domain: https://vspark-social-ai.vercel.app (verify deployment status)
+- Vercel LIVE / verified: https://vspark-social-ai.vercel.app
 - Organizer Drive folder: pending
-- Live CRUD / generation / Storage: local API checks passed; production/browser checks pending
+- Live CRUD / generation / Storage upload/retrieval: local AND production checks passed; browser screenshots pending
 
 References: [Next.js on Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs),
 [Supported Node versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions).
@@ -99,3 +99,9 @@ must be https://vspark-social-ai.vercel.app/api/integrations/drive/callback.
 Keep the local callback registered too if testing locally. Drive token RPC is
 confirmed available by the successful live OAuth redirect preflight; do not
 rerun migration 004 if already applied. Email remains disabled.
+
+Final public production checks passed without a deployment bypass token.
+The app was deployed using vercel --prod; GitHub main was pushed independently.
+If Git auto-deploy is not connected, use vercel.cmd --prod --yes for future
+source updates. No organizer Drive upload has occurred. The native screenshot
+automation pipe was unavailable, so capture genuine screenshots manually.

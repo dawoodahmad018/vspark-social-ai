@@ -1,6 +1,6 @@
 # Final competition verification - 18 November 2026
 
-## Verified locally with REAL services
+## Verified locally AND on the public production deployment
 
 - Firebase registration/login/token refresh and server-side identity verification.
 - Firebase Admin service-account role provisioning: a newly registered user can
@@ -11,7 +11,7 @@
 - Authenticated Gemini generation with database quota returned 2-3 captions and
   hashtags using gemini-3.1-flash-lite. No mock fallback.
 - Real private PNG upload; another user cannot retrieve it; unsafe SVG rejected.
-  Test file was removed. Owner retrieval is covered by the final live script.
+  Owner retrieval also passed on production. Test file was removed.
 - Drive private token RPC and OAuth redirect preflight passed. Consent URL uses
   drive.file + PKCE S256; state is encrypted, expires and is bound to the user.
   This confirms the required migration-004 RPC exists on the connected database.
@@ -52,8 +52,18 @@ remain valid until expiry. Email verification/reset/MFA flows are not implemente
 - Required production values securely set via stdin. No secret values logged.
 - Production NEXT_PUBLIC_APP_URL is the exact HTTPS origin. Google redirect is
   https://vspark-social-ai.vercel.app/api/integrations/drive/callback.
-- Production deployment and public HTTP check results are recorded in the final
-  handoff after deployment. An assigned domain alone is not a running deployment.
+- Production deployment READY, built successfully on Vercel and aliased to
+  https://vspark-social-ai.vercel.app. GitHub push to main succeeded.
+- Public HTTP smoke PASSED without a bypass token: login/register 200, workspace
+  307 redirects, API 401, foreign-Origin 403, forged-session denial and logout.
+- Full production live script PASSED: new-user admin role provisioning, auth,
+  CRUD/reload/schedule/conflict, direct two-user RLS, private PNG upload/owner
+  retrieval/cross-user denial, invalid-file rejection, authenticated Gemini and
+  Drive consent redirect preflight. Disposable posts/files/accounts were deleted.
+- Production cron returns 503 because no worker/cron secret is enabled; no email
+  is sent. No automatic scheduler is configured.
+- Screenshot automation attempted via the computer-use skill, but the native
+  pipe was unavailable. Genuine browser screenshots remain a manual requirement.
 - .env.local/.verification/.vercel stay ignored; .vercelignore excludes secrets.
   Source submission contains only committed source, template, docs and lockfile.
 
