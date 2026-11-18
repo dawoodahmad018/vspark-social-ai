@@ -1,6 +1,13 @@
-# Actual screenshots required before submission
+# Genuine screenshots before submission
 
-Add real browser captures of dashboard, generated captions, a saved schedule and
-notification settings after the corresponding flow works. Do not use fabricated
-success screens. Add Markdown image links to the project README. Screenshots are
-not yet included in this scaffold and remain a submission requirement.
+1. Public login/register page (no credentials visible).
+2. Authenticated dashboard at desktop and narrow mobile widths.
+3. Two or three actual Gemini captions with hashtags.
+4. Selected/edited caption and saved future schedule in the library.
+5. Real private attachment success, without tokens/keys in view.
+6. Drive consent/sync result AND the actual Drive file, only after it works.
+7. Integration/settings page honestly showing email unavailable.
+
+Crop account/credential details as needed. Save PNGs here, add Markdown image links
+in README, commit them, then rerun prepare-submission.mjs. No screenshots were
+fabricated. API/live checks do not substitute for browser visual checks.

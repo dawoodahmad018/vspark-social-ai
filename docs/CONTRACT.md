@@ -84,7 +84,9 @@ Use AES-256-GCM with random nonce and server TOKEN_ENCRYPTION_KEY. Store tokens 
 
 Database save and Drive sync are separate operations: a failed Drive call must
 not discard the saved post. Update an existing drive_file_id on retries; prevent
-concurrent creates with a per-post lease. Reflect partial failures and allow retry.
+concurrent creates using a stable, atomically reserved Google-generated file ID.
+Only one request reserves the ID; retries/concurrent creates target that same ID.
+Concurrent content updates can still be last-write-wins; re-sync after edits. Reflect partial failures and allow retry.
 Deletion first removes the DB row; Drive-file removal is a separate explicit action
 or a documented retained export. Do not claim that deletion removes a Drive file.
 
@@ -111,3 +113,13 @@ No fake captions, localStorage DB fallback, invented Drive links or email succes
 No public secrets. Test two-user isolation, logged-out API denial, invalid input,
 expired OAuth token, Drive partial failure, repeated worker invocation and canceled
 schedule. All contributors run typecheck/lint; lead runs build after integration.
+
+## Final implementation update
+
+Drive OAuth/connect/callback/disconnect and text-file export/update are implemented.
+Migration 004 adds only a service-role-only private token RPC. Actual consent and
+file operations remain unverified until performed. GET /api/integrations/drive
+returns {connected:boolean}. A reserved drive_file_id is not proof of a completed
+sync; only a successful sync response confirms Google accepted the file.
+Uploads validate file signature plus MIME; application maximum is 4 MB to stay
+under hosted request limits, while the bucket retains its 5 MB maximum.

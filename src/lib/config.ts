@@ -9,8 +9,8 @@ export function integrationStatus(): IntegrationStatus {
   return {
     auth: { configured: hasFirebase() && hasSupabase(), implemented: true, label: 'Firebase Auth + Supabase Postgres' },
     gemini: { configured: Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL), implemented: true, label: 'Gemini captions' },
-    drive: { configured: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.TOKEN_ENCRYPTION_KEY), implemented: false, label: 'Google Drive' },
+    drive: { configured: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REDIRECT_URI && process.env.SUPABASE_SERVICE_ROLE_KEY && /^[a-f\d]{64}$/i.test(process.env.TOKEN_ENCRYPTION_KEY || '')), implemented: true, label: 'Google Drive' },
     email: { configured: Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM), implemented: false, label: 'Email reminders' },
-    uploads: { configured: hasSupabase(), implemented: false, label: 'Private file uploads' },
+    uploads: { configured: hasSupabase(), implemented: true, label: 'Private file uploads' },
   };
 }

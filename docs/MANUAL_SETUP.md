@@ -153,3 +153,21 @@ References: [Firebase REST](https://firebase.google.com/docs/reference/rest/auth
 [Firebase JWT verification](https://firebase.google.com/docs/auth/admin/verify-id-tokens),
 [Supabase Firebase integration and role claim](https://supabase.com/docs/guides/auth/third-party/firebase-auth),
 [Google admin account update](https://cloud.google.com/identity-platform/docs/reference/rest/v1/projects.accounts/update).
+
+## Final readiness update
+
+Firebase admin credentials and migrations 001-003 are now configured: live role
+provisioning, CRUD, two-user RLS, scheduling/conflicts and app Gemini passed.
+Private upload also passed. For Drive, run 004_drive_token_rpc.sql ONCE, enable
+Drive API and add your Google tester account, then connect via Integrations.
+OAuth/code/PKCE/state, encrypted tokens, refresh/revoke and sync are implemented,
+but no Google consent or actual Drive file has been observed yet. Exact local
+callback: http://localhost:3000/api/integrations/drive/callback; add the final
+HTTPS production callback in Google Cloud and set GOOGLE_REDIRECT_URI accordingly.
+Never deploy with the localhost callback. Email worker remains incomplete.
+
+Observed final update: role provisioning, CRUD, RLS, authenticated Gemini and
+Storage now pass. Migration-004 token RPC is confirmed available by OAuth
+preflight; do not rerun it. Production variables are set and the GitHub repo is
+https://github.com/dawoodahmad018/vspark-social-ai. See VERIFICATION.md and the
+final handoff for deployment outcome. Actual Google consent/sync remains manual.

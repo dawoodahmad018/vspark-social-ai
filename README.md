@@ -1,5 +1,11 @@
 ﻿# V-Spark Social AI
 
+[GitHub](https://github.com/dawoodahmad018/vspark-social-ai) ? [Production domain](https://vspark-social-ai.vercel.app)
+
+Live-service checks: Firebase auth/admin provisioning, Postgres CRUD/scheduling,
+two-user RLS, authenticated Gemini and private uploads passed locally.
+See docs/VERIFICATION.md for exact limits and deployment verification.
+
 Next.js 16 App Router + React + TypeScript + Tailwind foundation for the official
 AI Social Media Content Generator & Scheduler. This app is isolated in
 `vspark-social-ai`; the existing Expo project is preserved.
@@ -52,20 +58,25 @@ node scripts/smoke.mjs http://localhost:3000
   table. No cloud migration or external integration has been run automatically.
 
 Real Firebase registration/login/refresh and a direct Gemini caption request were
-verified locally. Authenticated database CRUD remains blocked by cloud setup;
-see docs/VERIFICATION.md for exact results. Uploads, Drive and email remain incomplete.
+verified locally. Authenticated database CRUD and private uploads now pass live checks;
+see docs/VERIFICATION.md for exact results. Drive consent/sync and email remain unverified.
 
-## Explicitly incomplete integrations
+## Integration readiness
 
-Google Drive OAuth/sync, the file-upload handler and the email dispatch worker
-are reserved route skeletons returning NOT_IMPLEMENTED. Their controls remain
-unavailable even if environment keys are present. No cron schedule is activated.
-The application does not publish content to social platforms; it stores schedules
-and is intended to send email reminders after the worker is implemented.
+Real Firebase role provisioning, authenticated Postgres CRUD, scheduling, two-user
+API/RLS isolation and authenticated Gemini generation passed local live checks.
+Real private PNG upload, cross-user Storage denial and invalid-type rejection passed.
+The upload handler accepts matching PNG/JPEG/WebP/PDF signatures up to 4 MB.
 
-Firebase is the active identity provider. Supabase must be configured to accept
-that Firebase project, and tokens must include role=authenticated. Follow the
-exact setup in docs/MANUAL_SETUP.md. Ordinary CRUD uses RLS, not service-role bypass.
+Google Drive OAuth with PKCE/state, encrypted server token storage, refresh,
+disconnect and text-file save/update are implemented. Apply migration 004 once,
+then connect from Integrations. Stable Google-generated IDs are atomically
+reserved to prevent duplicate files on retries. A reserved ID does not confirm a
+successful sync; only a successful Google response does. Real consent and file
+creation/update remain unverified until manually performed.
+
+Email preferences/dispatch SQL exist, but the email worker remains a 501 stub.
+No automatic notification or inbox delivery is claimed. Keep dispatch disabled.
 
 ## Shared contract and five contributor assignments
 
@@ -89,7 +100,8 @@ Run numbered files in `supabase/migrations/` in order in a NEW Supabase project'
 SQL Editor. Migration 001 defines posts, preferences, dispatches, private token
 storage and private Storage policies. Migration 002 adds generation quotas and
 service-role grants. Migration 003 converts ownership to Firebase string UIDs and
-updates RLS/quotas. Apply each file once in order. Keep RLS enabled. Test two-user isolation before submission.
+updates RLS/quotas. Apply each file once in order. Migration 004 adds private Drive token access RPCs for the server only.
+Keep RLS enabled. Two-user CRUD/Storage isolation passed local live checks.
 
 Required post columns: id, user_id, prompt, caption, platform, scheduled_at,
 timezone, status, drive_file_id, created_at, updated_at. Optional attachment_path

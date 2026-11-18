@@ -85,10 +85,17 @@ Capture genuine screenshots in docs/screenshots, add links to README, commit
 them, and rerun export. Required submission links: GitHub repo, live Vercel URL,
 organizer Google Drive folder. Record real URLs below only after verification:
 
-- GitHub: pending
-- Vercel: pending
+- GitHub: https://github.com/dawoodahmad018/vspark-social-ai
+- Vercel production domain: https://vspark-social-ai.vercel.app (verify deployment status)
 - Organizer Drive folder: pending
-- Live CRUD / generation evidence: pending database setup and browser testing
+- Live CRUD / generation / Storage: local API checks passed; production/browser checks pending
 
 References: [Next.js on Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs),
 [Supported Node versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions).
+
+Production environment values were securely transferred by the agent. Do not
+re-enter them in command arguments. The exact Google Cloud authorized callback
+must be https://vspark-social-ai.vercel.app/api/integrations/drive/callback.
+Keep the local callback registered too if testing locally. Drive token RPC is
+confirmed available by the successful live OAuth redirect preflight; do not
+rerun migration 004 if already applied. Email remains disabled.
